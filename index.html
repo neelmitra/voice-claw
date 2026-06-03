@@ -241,6 +241,7 @@ kbd{display:inline-block;padding:1px 4px;border:1px solid var(--cp-border);borde
           <label class="toggle-label"><input type="checkbox" id="translateEn"><span class="toggle-track"></span>→ English</label>
           <label class="toggle-label"><input type="checkbox" id="autoCopy" checked><span class="toggle-track"></span>Auto-copy</label>
           <label class="toggle-label"><input type="checkbox" id="continuous"><span class="toggle-track"></span>No auto-stop</label>
+          <label class="toggle-label"><input type="checkbox" id="appendMode"><span class="toggle-track"></span>Append</label>
         </div>
 
         <div class="card">
@@ -581,7 +582,14 @@ kbd{display:inline-block;padding:1px 4px;border:1px solid var(--cp-border);borde
     };
     return r;
   }
-  function startRecording(){finalTranscript='';interimTranscript='';audioRow.classList.remove('show');currentAudioBlob=null;fillerBadge.classList.add('hidden');waveformPh.style.display='flex';renderTranscript();updateAIButtons();
+  const appendToggle=$('appendMode');
+  function startRecording(){
+    if(!appendToggle.checked){finalTranscript='';} else {
+      // In append mode, keep existing text and add a separator
+      const live=transcriptBody.innerText.trim();
+      if(live&&!live.startsWith('Press Space')){finalTranscript=live+'\n';}
+    }
+    interimTranscript='';audioRow.classList.remove('show');currentAudioBlob=null;fillerBadge.classList.add('hidden');waveformPh.style.display='flex';renderTranscript();updateAIButtons();
     try{recognition=createRecognition();recognition.start();startTimer();startAudio();}catch(e){statusText.textContent='Error: '+e.message;console.error(e);}
   }
   function stopRecording(){
