@@ -606,15 +606,16 @@ kbd{display:inline-block;padding:1px 4px;border:1px solid var(--cp-border);borde
     }
 
     try{
-      const resp=await fetch(settings.apiBase+'/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+settings.apiKey},body:JSON.stringify({model:settings.model,messages:[{role:'system',content:prompt},{role:'user',content:finalTranscript.trim()}],temperature:0.3,max_tokens:2048})});
-      if(!resp.ok)throw new Error('API '+resp.status);
+      console.log('Voice Claw: calling API',settings.apiBase,'model:',settings.model,'mode:',currentMode);
+      const resp=await fetch(settings.apiBase+'/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+settings.apiKey},body:JSON.stringify({model:settings.model,messages:[{role:'system',content:prompt},{role:'user',content:'Edit this text:\n\n'+finalTranscript.trim()}],temperature:0.3,max_tokens:2048})});
+      if(!resp.ok){const errText=await resp.text();console.error('Voice Claw API error:',resp.status,errText);throw new Error('API '+resp.status+': '+errText.substring(0,100));}
       const data=await resp.json();const result=data.choices?.[0]?.message?.content?.trim();
       if(result){
         finalTranscript=result;renderTranscript();updateAIButtons();
         const label=needsTranslate?(needsFormat?'Translated + formatted':'Translated to English'):'Formatted as '+currentMode;
         statusText.textContent='✨ '+label+'!';showToast('✨ '+label);
       }
-    }catch(e){statusText.textContent='Failed';showToast(e.message);}
+    }catch(e){console.error('Voice Claw auto-format error:',e);statusText.textContent='Failed: '+e.message;showToast('❌ '+e.message);}
     if(autoCopyToggle.checked)copyText(finalTranscript.trim());addToHistory(finalTranscript.trim());
   }
 
