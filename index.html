@@ -250,15 +250,7 @@ kbd{display:inline-block;padding:1px 4px;border:1px solid var(--cp-border);borde
             <h2>Transcript <span class="filler-badge hidden" id="fillerBadge"></span></h2>
             <div class="card-actions">
               <button class="btn" id="clearBtn">🗑️</button>
-              <div class="copy-menu">
-                <button class="btn primary" id="copyBtn">📋 Copy ▾</button>
-                <div class="copy-dropdown" id="copyDropdown">
-                  <button class="copy-option" data-format="plain">📄 Plain text</button>
-                  <button class="copy-option" data-format="bullets">• Bullet list</button>
-                  <button class="copy-option" data-format="numbered">1. Numbered list</button>
-                  <button class="copy-option" data-format="email">✉️ Email draft</button>
-                </div>
-              </div>
+              <button class="btn primary" id="copyBtn">📋 Copy</button>
             </div>
           </div>
           <div class="transcript-body" id="transcriptBody" contenteditable="true" spellcheck="true">
@@ -719,16 +711,10 @@ kbd{display:inline-block;padding:1px 4px;border:1px solid var(--cp-border);borde
     case'numbered':return text.split(/[.!?]+/).filter(s=>s.trim()).map((s,i)=>(i+1)+'. '+s.trim()).join('\n');
     case'email':{const l=text.split(/[.!?]+/).filter(s=>s.trim());return'Subject: '+(l[0]||'').trim()+'\n\nHi,\n\n'+(l.slice(1).map(s=>s.trim()).join('\n')||text)+'\n\nBest regards';}default:return text;}
   }
-  copyBtn.addEventListener('click',e=>{
-    e.stopPropagation();
+  copyBtn.addEventListener('click',()=>{
     const text=transcriptBody.innerText.trim();
-    if(text&&!text.startsWith('Press Space')){
-      navigator.clipboard.writeText(text).then(()=>showToast('📋 Copied!')).catch(()=>{});
-    }
+    if(text&&!text.startsWith('Press Space')) navigator.clipboard.writeText(text).then(()=>showToast('📋 Copied!')).catch(()=>{});
   });
-  copyBtn.addEventListener('contextmenu',e=>{e.preventDefault();e.stopPropagation();copyDropdown.classList.toggle('show');});
-  document.querySelectorAll('.copy-option').forEach(o=>{o.addEventListener('click',()=>{const t=transcriptBody.innerText.trim();if(t&&!t.startsWith('Press Space'))copyText(formatAs(o.dataset.format,t),'Copied as '+o.dataset.format+'!');copyDropdown.classList.remove('show');});});
-  document.addEventListener('click',()=>copyDropdown.classList.remove('show'));
 
   // History
   function addToHistory(text){history.unshift({text,time:new Date().toISOString()});if(history.length>50)history=history.slice(0,50);try{localStorage.setItem('vb_history',JSON.stringify(history));}catch(e){}renderHistory();}
