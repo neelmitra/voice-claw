@@ -372,8 +372,29 @@ kbd{display:inline-block;padding:1px 4px;border:1px solid var(--cp-border);borde
   let history=[]; try{history=JSON.parse(localStorage.getItem('vb_history')||'[]');}catch(e){}
   let dictionary=[]; try{dictionary=JSON.parse(localStorage.getItem('vb_dict')||'[]');}catch(e){}
   let snippets=[]; try{snippets=JSON.parse(localStorage.getItem('vb_snippets')||'[]');}catch(e){}
-  const VB='4.0';
-  if(localStorage.getItem('vb_version')!==VB){history=[];dictionary=[];snippets=[];localStorage.removeItem('vb_history');localStorage.removeItem('vb_dict');localStorage.removeItem('vb_snippets');localStorage.setItem('vb_version',VB);}
+  const VB='5.0';
+  if(localStorage.getItem('vb_version')!==VB){
+    history=[];
+    dictionary=[
+      {from:"claw pilot",to:"Clawpilot"},{from:"clawpilot",to:"Clawpilot"},
+      {from:"copilot",to:"Copilot"},{from:"github",to:"GitHub"},
+      {from:"azure",to:"Azure"},{from:"power bi",to:"Power BI"},
+      {from:"teams",to:"Teams"},{from:"one drive",to:"OneDrive"},
+      {from:"chat gpt",to:"ChatGPT"},{from:"open ai",to:"OpenAI"}
+    ];
+    snippets=[
+      {name:"greeting",text:"Hello! Thanks for reaching out. How can I help you today?"},
+      {name:"calendar",text:"You can book a meeting with me using my calendar link."},
+      {name:"signoff",text:"Best regards,\nLooking forward to hearing from you."},
+      {name:"daily brief",text:"Summarize my unread emails and today's calendar. Highlight anything urgent and list action items."},
+      {name:"follow up",text:"Find emails from the last 3 days that I haven't replied to and draft short follow-up responses."},
+      {name:"meeting prep",text:"What meetings do I have in the next 2 hours? Show attendees, agenda, and any relevant recent emails."}
+    ];
+    localStorage.removeItem('vb_history');
+    localStorage.setItem('vb_dict',JSON.stringify(dictionary));
+    localStorage.setItem('vb_snippets',JSON.stringify(snippets));
+    localStorage.setItem('vb_version',VB);
+  }
 
   // Settings
   const loadSettings=()=>({apiBase:localStorage.getItem('vb_apiBase')||'https://api.openai.com/v1',apiKey:localStorage.getItem('vb_apiKey')||'',model:localStorage.getItem('vb_model')||'gpt-4o-mini'});
