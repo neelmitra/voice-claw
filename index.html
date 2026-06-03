@@ -171,8 +171,7 @@ canvas#waveform{width:100%;height:100%;display:block;}
 .kbd-hints{text-align:center;font-size:0.5625rem;color:var(--cp-text-soft);padding:0.5rem;flex-shrink:0;border-top:1px solid var(--cp-border);}
 kbd{display:inline-block;padding:1px 4px;border:1px solid var(--cp-border);border-radius:3px;background:var(--cp-surface-soft);font-family:Consolas,"Courier New",monospace;font-size:0.5rem;}
 .unsupported{text-align:center;padding:3rem;color:var(--cp-danger);display:none;}
-.grammar-error{background:rgba(209,52,56,0.15);border-bottom:2px wavy var(--cp-danger);cursor:help;position:relative;}
-.grammar-error:hover::after{content:attr(data-suggestion);position:absolute;bottom:100%;left:0;background:var(--cp-surface);border:1px solid var(--cp-border);border-radius:4px;padding:0.25rem 0.5rem;font-size:0.75rem;color:var(--cp-success);white-space:nowrap;box-shadow:var(--cp-shadow);z-index:100;}
+.grammar-error{background:rgba(209,52,56,0.15);border-bottom:2px wavy var(--cp-danger);cursor:help;}
 </style>
 </head>
 <body>
@@ -692,7 +691,7 @@ kbd{display:inline-block;padding:1px 4px;border:1px solid var(--cp-border);borde
         const word=html.substring(m.offset,m.offset+m.length);
         const suggestion=m.replacements?.[0]?.value||m.message;
         const tip=m.message+(m.replacements?.[0]?' → '+m.replacements[0].value:'');
-        html=html.substring(0,m.offset)+'<span class="grammar-error" data-suggestion="'+tip.replace(/"/g,'&quot;')+'" title="'+tip.replace(/"/g,'&quot;')+'">'+word+'</span>'+html.substring(m.offset+m.length);
+        html=html.substring(0,m.offset)+'<span class="grammar-error" title="'+tip.replace(/"/g,'&quot;')+'">'+word+'</span>'+html.substring(m.offset+m.length);
       }
       transcriptBody.innerHTML=html;
       showToast('📝 '+data.matches.length+' issue'+(data.matches.length>1?'s':'')+' found — hover to see suggestions');
