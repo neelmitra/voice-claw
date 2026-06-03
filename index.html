@@ -554,7 +554,22 @@ kbd{display:inline-block;padding:1px 4px;border:1px solid var(--cp-border);borde
       if(autoCopyToggle.checked&&finalTranscript.trim()){ navigator.clipboard.writeText(finalTranscript.trim()).catch(()=>{}); }
       if(!continuousToggle.checked){ clearTimeout(silenceTimer); silenceTimer=setTimeout(()=>{ if(isRecording) stopRecording(); },SILENCE_TIMEOUT); }
     };
-    r.onerror=(e)=>{console.error('Speech error:',e.error);if(e.error==='no-speech')statusText.textContent='No speech detected';else if(e.error==='not-allowed')statusText.textContent='Mic denied';else statusText.textContent='Error: '+e.error;};
+    r.onerror=(e)=>{
+      console.error('Speech error:',e.error);
+      if(e.error==='network'){
+        // Edge network error — stop retrying, show clear message
+        isRecording=false;
+        clearTimeout(restartTimer);
+        micBtn.classList.remove('recording');statusDot.className='status-dot ready';
+        statusText.textContent='Network error — check internet or try Chrome';
+        micHint.textContent='Space to retry';
+        stopTimer();stopAudio();
+        return;
+      }
+      if(e.error==='no-speech')statusText.textContent='No speech detected';
+      else if(e.error==='not-allowed')statusText.textContent='Mic denied';
+      else statusText.textContent='Error: '+e.error;
+    };
     r.onend=()=>{
       console.log('Voice Claw: onend fired, isRecording:',isRecording,'finalTranscript:',finalTranscript.substring(0,50));
       if(isRecording){
