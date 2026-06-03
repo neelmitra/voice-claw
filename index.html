@@ -614,11 +614,21 @@ kbd{display:inline-block;padding:1px 4px;border:1px solid var(--cp-border);borde
 
     try{
       console.log('Voice Claw: calling API',settings.apiBase,'model:',settings.model,'mode:',currentMode);
-      const resp=await fetch(settings.apiBase+'/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+settings.apiKey},body:JSON.stringify({model:settings.model,messages:[{role:'system',content:prompt},{role:'user',content:'Edit this text:\n\n'+finalTranscript.trim()}],temperature:0.3,max_tokens:2048})});
+      const resp=await fetch(settings.apiBase+'/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+settings.apiKey},body:JSON.stringify({model:settings.model,messages:[{role:'system',content:prompt},{role:'user',content:'Edit this text:\n\n'+finalTranscript.trim()}],temperature:0.3,max_tokens:2048,stream:true})});
       if(!resp.ok){const errText=await resp.text();console.error('Voice Claw API error:',resp.status,errText);throw new Error('API '+resp.status+': '+errText.substring(0,100));}
-      const data=await resp.json();const result=data.choices?.[0]?.message?.content?.trim();
+      // Stream the response
+      let result='';
+      const reader=resp.body.getReader();const decoder=new TextDecoder();
+      while(true){
+        const{done,value}=await reader.read();if(done)break;
+        const chunk=decoder.decode(value);
+        for(const line of chunk.split('\n')){
+          if(!line.startsWith('data: ')||line==='data: [DONE]')continue;
+          try{const j=JSON.parse(line.slice(6));const delta=j.choices?.[0]?.delta?.content;if(delta){result+=delta;finalTranscript=result;transcriptBody.innerText=result;}}catch(e){}
+        }
+      }
       if(result){
-        finalTranscript=result;renderTranscript();updateAIButtons();
+        finalTranscript=result.trim();renderTranscript();updateAIButtons();
         const label=needsTranslate?(needsFormat?'Translated + formatted':'Translated to English'):'Formatted as '+currentMode;
         statusText.textContent='✨ '+label+'!';showToast('✨ '+label);
       }
