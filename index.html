@@ -560,6 +560,7 @@ kbd{display:inline-block;padding:1px 4px;border:1px solid var(--cp-border);borde
     };
     r.onerror=(e)=>{console.error('Speech error:',e.error);if(e.error==='no-speech')statusText.textContent='No speech detected';else if(e.error==='not-allowed')statusText.textContent='Mic denied';else statusText.textContent='Error: '+e.error;};
     r.onend=()=>{
+      console.log('Voice Claw: onend fired, isRecording:',isRecording,'finalTranscript:',finalTranscript.substring(0,50));
       if(isRecording){try{recognition.start();}catch(e){}return;}  // keep listening until user stops
       clearTimeout(silenceTimer);
       micBtn.classList.remove('recording');statusDot.className='status-dot ready';statusText.textContent='Ready';micHint.textContent='Space to record';stopTimer();stopAudio();updateStats();
@@ -573,6 +574,7 @@ kbd{display:inline-block;padding:1px 4px;border:1px solid var(--cp-border);borde
         const settings=loadSettings();
         const needsTranslate=translateEnToggle.checked&&!langSelect.value.startsWith('en')&&settings.apiKey;
         const needsFormat=currentMode!=='general'&&settings.apiKey;
+        console.log('Voice Claw: mode=',currentMode,'apiKey set:',!!settings.apiKey,'needsFormat:',needsFormat,'needsTranslate:',needsTranslate);
         if(needsTranslate||needsFormat){autoFormatAndTranslate(needsTranslate,needsFormat);}
         else{if(autoCopyToggle.checked)copyText(finalTranscript.trim());addToHistory(finalTranscript.trim());}
       }
@@ -582,7 +584,12 @@ kbd{display:inline-block;padding:1px 4px;border:1px solid var(--cp-border);borde
   function startRecording(){finalTranscript='';interimTranscript='';audioRow.classList.remove('show');currentAudioBlob=null;fillerBadge.classList.add('hidden');waveformPh.style.display='flex';renderTranscript();updateAIButtons();
     try{recognition=createRecognition();recognition.start();startTimer();startAudio();}catch(e){statusText.textContent='Error: '+e.message;console.error(e);}
   }
-  function stopRecording(){isRecording=false;if(recognition)try{recognition.stop();}catch(e){}}
+  function stopRecording(){
+    isRecording=false;
+    clearTimeout(silenceTimer);
+    console.log('Voice Claw: stopRecording called, finalTranscript length:',finalTranscript.length);
+    if(recognition)try{recognition.stop();}catch(e){}
+  }
   function toggleRecording(){isRecording?stopRecording():startRecording();}
 
   // Auto-format and/or translate
