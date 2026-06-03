@@ -527,41 +527,31 @@ kbd{display:inline-block;padding:1px 4px;border:1px solid var(--cp-border);borde
   function createRecognition(){
     const r=new SR();r.lang=langSelect.value;r.interimResults=true;r.continuous=true;r.maxAlternatives=1;
     r.onstart=()=>{isRecording=true;micBtn.classList.add('recording');statusDot.className='status-dot recording';statusText.textContent='Listening...';micHint.textContent='Space to stop';};
-    r.onresult=(e)=>{interimTranscript='';for(let i=e.resultIndex;i<e.results.length;i++){const t=e.results[i][0].transcript;if(e.results[i].isFinal){
-      const chunk=processTranscript(t.trim());
-      // Correction commands
-      const cancelLineMatch=chunk.match(/\b(cancel|delete|remove|undo|scratch)\s+(the\s+)?(whole\s+|entire\s+|last\s+)?line\b/i);
-      const cancelWordsMatch=chunk.match(/\b(cancel|delete|remove|undo|scratch)\s+(the\s+)?(last\s+)?(\d+)\s+words?\b/i);
-      const cancelLastMatch=chunk.match(/\b(cancel|delete|remove|undo|scratch)\s+(that|it|this)\b/i);
-      const clearAllMatch=chunk.match(/\b(clear all|start over|clear everything)\b/i);
-
-      if(clearAllMatch){
-        finalTranscript=''; showToast('Cleared all');
-      } else if(cancelLineMatch){
-        // Remove last line (everything after last newline, or last sentence)
-        const nlIdx=finalTranscript.lastIndexOf('\n');
-        const dotIdx=finalTranscript.lastIndexOf('. ');
-        const cutAt=Math.max(nlIdx,dotIdx);
-        finalTranscript=cutAt>0?finalTranscript.substring(0,cutAt+1).trim():'';
-        showToast('Removed last line');
-      } else if(cancelWordsMatch){
-        const n=parseInt(cancelWordsMatch[4],10);
-        const words=finalTranscript.trim().split(/\s+/);
-        finalTranscript=words.slice(0,-n).join(' ');
-        showToast('Removed last '+n+' words');
-      } else if(cancelLastMatch){
-        // Remove last 3 words
-        const words=finalTranscript.trim().split(/\s+/);
-        finalTranscript=words.slice(0,-3).join(' ');
-        showToast('Removed last 3 words');
-      } else {
-        finalTranscript+=(finalTranscript?' ':'')+chunk;
+    r.onresult=(e)=>{
+      interimTranscript='';
+      for(let i=e.resultIndex;i<e.results.length;i++){
+        const t=e.results[i][0].transcript;
+        if(e.results[i].isFinal){
+          const chunk=processTranscript(t.trim());
+          const cancelLineMatch=chunk.match(/\b(cancel|delete|remove|undo|scratch)\s+(the\s+)?(whole\s+|entire\s+|last\s+)?line\b/i);
+          const cancelWordsMatch=chunk.match(/\b(cancel|delete|remove|undo|scratch)\s+(the\s+)?(last\s+)?(\d+)\s+words?\b/i);
+          const cancelLastMatch=chunk.match(/\b(cancel|delete|remove|undo|scratch)\s+(that|it|this)\b/i);
+          const clearAllMatch=chunk.match(/\b(clear all|start over|clear everything)\b/i);
+          if(clearAllMatch){ finalTranscript=''; showToast('Cleared all'); }
+          else if(cancelLineMatch){ const nl=finalTranscript.lastIndexOf('\n'); const dot=finalTranscript.lastIndexOf('. '); const cut=Math.max(nl,dot); finalTranscript=cut>0?finalTranscript.substring(0,cut+1).trim():''; showToast('Removed last line'); }
+          else if(cancelWordsMatch){ const n=parseInt(cancelWordsMatch[4],10); finalTranscript=finalTranscript.trim().split(/\s+/).slice(0,-n).join(' '); showToast('Removed last '+n+' words'); }
+          else if(cancelLastMatch){ finalTranscript=finalTranscript.trim().split(/\s+/).slice(0,-3).join(' '); showToast('Removed last 3 words'); }
+          else { finalTranscript+=(finalTranscript?' ':'')+chunk; }
+        } else {
+          interimTranscript+=t;
+        }
       }
-    }else interimTranscript+=t;}renderTranscript();updateAIButtons();updateStats();applySnippetsToFull();
-      // Auto-copy to clipboard on every final result so clipboard stays current
-      if(autoCopyToggle.checked&&finalTranscript.trim()){navigator.clipboard.writeText(finalTranscript.trim()).catch(()=>{});}
-      // Reset silence auto-stop timer
-      if(!continuousToggle.checked){clearTimeout(silenceTimer);silenceTimer=setTimeout(()=>{if(isRecording)stopRecording();},SILENCE_TIMEOUT);}
+      renderTranscript();
+      updateAIButtons();
+      updateStats();
+      applySnippetsToFull();
+      if(autoCopyToggle.checked&&finalTranscript.trim()){ navigator.clipboard.writeText(finalTranscript.trim()).catch(()=>{}); }
+      if(!continuousToggle.checked){ clearTimeout(silenceTimer); silenceTimer=setTimeout(()=>{ if(isRecording) stopRecording(); },SILENCE_TIMEOUT); }
     };
     r.onerror=(e)=>{console.error('Speech error:',e.error);if(e.error==='no-speech')statusText.textContent='No speech detected';else if(e.error==='not-allowed')statusText.textContent='Mic denied';else statusText.textContent='Error: '+e.error;};
     r.onend=()=>{
