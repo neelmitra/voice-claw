@@ -719,7 +719,14 @@ kbd{display:inline-block;padding:1px 4px;border:1px solid var(--cp-border);borde
     case'numbered':return text.split(/[.!?]+/).filter(s=>s.trim()).map((s,i)=>(i+1)+'. '+s.trim()).join('\n');
     case'email':{const l=text.split(/[.!?]+/).filter(s=>s.trim());return'Subject: '+(l[0]||'').trim()+'\n\nHi,\n\n'+(l.slice(1).map(s=>s.trim()).join('\n')||text)+'\n\nBest regards';}default:return text;}
   }
-  copyBtn.addEventListener('click',e=>{e.stopPropagation();copyDropdown.classList.toggle('show');});
+  copyBtn.addEventListener('click',e=>{
+    e.stopPropagation();
+    const text=transcriptBody.innerText.trim();
+    if(text&&!text.startsWith('Press Space')){
+      navigator.clipboard.writeText(text).then(()=>showToast('📋 Copied!')).catch(()=>{});
+    }
+  });
+  copyBtn.addEventListener('contextmenu',e=>{e.preventDefault();e.stopPropagation();copyDropdown.classList.toggle('show');});
   document.querySelectorAll('.copy-option').forEach(o=>{o.addEventListener('click',()=>{const t=transcriptBody.innerText.trim();if(t&&!t.startsWith('Press Space'))copyText(formatAs(o.dataset.format,t),'Copied as '+o.dataset.format+'!');copyDropdown.classList.remove('show');});});
   document.addEventListener('click',()=>copyDropdown.classList.remove('show'));
 
