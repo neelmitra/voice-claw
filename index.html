@@ -361,6 +361,7 @@ kbd{display:inline-block;padding:1px 4px;border:1px solid var(--cp-border);borde
   let audioCtx=null,analyser=null,audioStream=null,mediaRecorder=null,audioChunks=[];
   let currentAudioBlob=null;
   let silenceTimer=null;
+  let restartTimer=null;
   const SILENCE_TIMEOUT=4000; // ms of silence before auto-stop (when not in continuous mode)
 
   // Persisted data
@@ -557,8 +558,7 @@ kbd{display:inline-block;padding:1px 4px;border:1px solid var(--cp-border);borde
     r.onend=()=>{
       console.log('Voice Claw: onend fired, isRecording:',isRecording,'finalTranscript:',finalTranscript.substring(0,50));
       if(isRecording){
-        // Restart with a small delay — Edge native SR needs time between stop/start
-        setTimeout(()=>{
+        restartTimer=setTimeout(()=>{
           if(isRecording){try{recognition.start();}catch(e){console.error('Restart failed:',e);}}
         },100);
         return;
@@ -595,6 +595,7 @@ kbd{display:inline-block;padding:1px 4px;border:1px solid var(--cp-border);borde
   function stopRecording(){
     isRecording=false;
     clearTimeout(silenceTimer);
+    clearTimeout(restartTimer);
     console.log('Voice Claw: stopRecording called, finalTranscript length:',finalTranscript.length);
     if(recognition)try{recognition.stop();}catch(e){}
   }
