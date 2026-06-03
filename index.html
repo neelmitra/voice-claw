@@ -335,7 +335,7 @@ kbd{display:inline-block;padding:1px 4px;border:1px solid var(--cp-border);borde
 
 <script>
 (() => {
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const SR = window.webkitSpeechRecognition || window.SpeechRecognition;
   if (!SR) { document.getElementById('app').style.display='none'; document.getElementById('unsupported').style.display='block'; return; }
 
   const $ = id => document.getElementById(id);
@@ -556,7 +556,13 @@ kbd{display:inline-block;padding:1px 4px;border:1px solid var(--cp-border);borde
     r.onerror=(e)=>{console.error('Speech error:',e.error);if(e.error==='no-speech')statusText.textContent='No speech detected';else if(e.error==='not-allowed')statusText.textContent='Mic denied';else statusText.textContent='Error: '+e.error;};
     r.onend=()=>{
       console.log('Voice Claw: onend fired, isRecording:',isRecording,'finalTranscript:',finalTranscript.substring(0,50));
-      if(isRecording){try{recognition.start();}catch(e){}return;}  // keep listening until user stops
+      if(isRecording){
+        // Restart with a small delay — Edge native SR needs time between stop/start
+        setTimeout(()=>{
+          if(isRecording){try{recognition.start();}catch(e){console.error('Restart failed:',e);}}
+        },100);
+        return;
+      }
       clearTimeout(silenceTimer);
       micBtn.classList.remove('recording');statusDot.className='status-dot ready';statusText.textContent='Ready';micHint.textContent='Space to record';stopTimer();stopAudio();updateStats();
       if(finalTranscript.trim()){
