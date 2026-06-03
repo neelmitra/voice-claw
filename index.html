@@ -585,18 +585,20 @@ kbd{display:inline-block;padding:1px 4px;border:1px solid var(--cp-border);borde
   const appendToggle=$('appendMode');
   function startRecording(){
     if(!appendToggle.checked){finalTranscript='';} else {
-      // In append mode, keep existing text and add a separator
       const live=transcriptBody.innerText.trim();
       if(live&&!live.startsWith('Press Space')){finalTranscript=live+'\n';}
     }
     interimTranscript='';audioRow.classList.remove('show');currentAudioBlob=null;fillerBadge.classList.add('hidden');waveformPh.style.display='flex';renderTranscript();updateAIButtons();
-    try{recognition=createRecognition();recognition.start();startTimer();startAudio();}catch(e){statusText.textContent='Error: '+e.message;console.error(e);}
+    // Small delay before starting — Edge needs time to release mic from previous session
+    setTimeout(()=>{
+      try{recognition=createRecognition();recognition.start();startTimer();startAudio();}
+      catch(e){statusText.textContent='Error: '+e.message;console.error(e);}
+    },200);
   }
   function stopRecording(){
     isRecording=false;
     clearTimeout(silenceTimer);
     clearTimeout(restartTimer);
-    console.log('Voice Claw: stopRecording called, finalTranscript length:',finalTranscript.length);
     if(recognition)try{recognition.stop();}catch(e){}
   }
   function toggleRecording(){isRecording?stopRecording():startRecording();}
