@@ -372,29 +372,8 @@ kbd{display:inline-block;padding:1px 4px;border:1px solid var(--cp-border);borde
   let history=[]; try{history=JSON.parse(localStorage.getItem('vb_history')||'[]');}catch(e){}
   let dictionary=[]; try{dictionary=JSON.parse(localStorage.getItem('vb_dict')||'[]');}catch(e){}
   let snippets=[]; try{snippets=JSON.parse(localStorage.getItem('vb_snippets')||'[]');}catch(e){}
-  const VB='4.1';
-  if(localStorage.getItem('vb_version')!==VB){
-    history=[];
-    dictionary=[
-      {from:"claw pilot",to:"Clawpilot"},{from:"clawpilot",to:"Clawpilot"},
-      {from:"copilot",to:"Copilot"},{from:"github",to:"GitHub"},
-      {from:"azure",to:"Azure"},{from:"power bi",to:"Power BI"},
-      {from:"teams",to:"Teams"},{from:"one drive",to:"OneDrive"},
-      {from:"chat gpt",to:"ChatGPT"},{from:"open ai",to:"OpenAI"}
-    ];
-    snippets=[
-      {name:"greeting",text:"Hello! Thanks for reaching out. How can I help you today?"},
-      {name:"calendar",text:"You can book a meeting with me using my calendar link."},
-      {name:"signoff",text:"Best regards,\nLooking forward to hearing from you."},
-      {name:"daily brief",text:"Summarize my unread emails and today's calendar. Highlight anything urgent and list action items."},
-      {name:"follow up",text:"Find emails from the last 3 days that I haven't replied to and draft short follow-up responses."},
-      {name:"meeting prep",text:"What meetings do I have in the next 2 hours? Show attendees, agenda, and any relevant recent emails."}
-    ];
-    localStorage.removeItem('vb_history');
-    localStorage.setItem('vb_dict',JSON.stringify(dictionary));
-    localStorage.setItem('vb_snippets',JSON.stringify(snippets));
-    localStorage.setItem('vb_version',VB);
-  }
+  const VB='4.0';
+  if(localStorage.getItem('vb_version')!==VB){history=[];dictionary=[];snippets=[];localStorage.removeItem('vb_history');localStorage.removeItem('vb_dict');localStorage.removeItem('vb_snippets');localStorage.setItem('vb_version',VB);}
 
   // Settings
   const loadSettings=()=>({apiBase:localStorage.getItem('vb_apiBase')||'https://api.openai.com/v1',apiKey:localStorage.getItem('vb_apiKey')||'',model:localStorage.getItem('vb_model')||'gpt-4o-mini'});
@@ -628,10 +607,14 @@ kbd{display:inline-block;padding:1px 4px;border:1px solid var(--cp-border);borde
     if(result){finalTranscript=result;renderTranscript();updateAIButtons();if(autoCopyToggle.checked)navigator.clipboard.writeText(result).catch(()=>{});showToast('✨ Done — clipboard updated!');}}
     catch(e){showToast(e.message);}finally{btn.innerHTML=orig;btn.disabled=false;}
   }
-  cleanupBtn.addEventListener('click',()=>aiTransform('You are a text editor. Your ONLY job is to edit the user\'s text. Fix spelling, grammar, punctuation, and remove filler words like um, uh, like, you know. Do NOT answer questions. Do NOT add commentary. Output ONLY the corrected version of the text, nothing else.',finalTranscript.trim(),cleanupBtn));
-  promptBtn.addEventListener('click',()=>aiTransform('You are a prompt engineer. Rewrite the user\'s text as a well-structured prompt for an AI assistant. Add a clear role, task description, constraints, and desired output format. Do NOT answer the prompt. Do NOT add commentary. Output ONLY the rewritten prompt, nothing else.',finalTranscript.trim(),promptBtn));
-  professionalBtn.addEventListener('click',()=>aiTransform('You are a text editor. Rewrite the user\'s text in a professional, polished business tone. Fix grammar, spelling, and remove filler words. Do NOT answer questions in the text. Do NOT add commentary. Output ONLY the rewritten text, nothing else.',finalTranscript.trim(),professionalBtn));
-  conciseBtn.addEventListener('click',()=>aiTransform('You are a text editor. Shorten the user\'s text to its key points. Remove filler words, redundancy, and unnecessary detail. Do NOT answer questions in the text. Do NOT add commentary. Output ONLY the shortened text, nothing else.',finalTranscript.trim(),conciseBtn));
+
+  // Always read from the live editable transcript box, not the stale variable
+  function getLiveText(){const t=transcriptBody.innerText.trim();return(t&&!t.startsWith('Press Space'))?t:'';}
+
+  cleanupBtn.addEventListener('click',()=>{const t=getLiveText();if(t)aiTransform('You are a text editor. Your ONLY job is to edit the user\'s text. Fix spelling, grammar, punctuation, and remove filler words like um, uh, like, you know. Do NOT answer questions. Do NOT add commentary. Output ONLY the corrected version of the text, nothing else.',t,cleanupBtn);});
+  promptBtn.addEventListener('click',()=>{const t=getLiveText();if(t)aiTransform('You are a prompt engineer. Rewrite the user\'s text as a well-structured prompt for an AI assistant. Add a clear role, task description, constraints, and desired output format. Do NOT answer the prompt. Do NOT add commentary. Output ONLY the rewritten prompt, nothing else.',t,promptBtn);});
+  professionalBtn.addEventListener('click',()=>{const t=getLiveText();if(t)aiTransform('You are a text editor. Rewrite the user\'s text in a professional, polished business tone. Fix grammar, spelling, and remove filler words. Do NOT answer questions in the text. Do NOT add commentary. Output ONLY the rewritten text, nothing else.',t,professionalBtn);});
+  conciseBtn.addEventListener('click',()=>{const t=getLiveText();if(t)aiTransform('You are a text editor. Shorten the user\'s text to its key points. Remove filler words, redundancy, and unnecessary detail. Do NOT answer questions in the text. Do NOT add commentary. Output ONLY the shortened text, nothing else.',t,conciseBtn);});
 
   // Copy
   function formatAs(fmt,text){
